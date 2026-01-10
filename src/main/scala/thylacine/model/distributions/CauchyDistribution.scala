@@ -56,7 +56,7 @@ private[thylacine] case class CauchyDistribution(
     input: VectorContainer
   ): Double = {
     val differentialFromMean = input.rawVector.zip(mean.rawVector).map { case (i, m) => i - m }
-    val quadForm = LinearAlgebra.quadraticForm(differentialFromMean, rawInverseCovariance)
+    val quadForm             = LinearAlgebra.quadraticForm(differentialFromMean, rawInverseCovariance)
 
     logMultiplier - (1.0 + domainDimension) / 2.0 * Math.log(1 + quadForm)
   }
@@ -65,9 +65,9 @@ private[thylacine] case class CauchyDistribution(
     input: VectorContainer
   ): VectorContainer = {
     val differentialFromMean = input.rawVector.zip(mean.rawVector).map { case (i, m) => i - m }
-    val quadForm = LinearAlgebra.quadraticForm(differentialFromMean, rawInverseCovariance)
-    val multiplierResult = (1 + domainDimension) / (1 + quadForm)
-    val vectorResult = LinearAlgebra.multiplyMV(rawInverseCovariance, differentialFromMean)
+    val quadForm             = LinearAlgebra.quadraticForm(differentialFromMean, rawInverseCovariance)
+    val multiplierResult     = (1 + domainDimension) / (1 + quadForm)
+    val vectorResult         = LinearAlgebra.multiplyMV(rawInverseCovariance, differentialFromMean)
 
     VectorContainer(vectorResult.map(_ * multiplierResult))
   }
@@ -77,8 +77,8 @@ private[thylacine] case class CauchyDistribution(
   // Leveraging connection to Gamma and Gaussian distributions
   private[thylacine] def getRawSample: VectorContainer = {
     val scaledCovariance = LinearAlgebra.divide(covariance.rawMatrix, chiSquared.rand())
-    val scaledCovArray = LinearAlgebra.toArray2D(scaledCovariance)
-    val mvn = new MultivariateGaussianDistribution(mean.rawVector, scaledCovArray)
+    val scaledCovArray   = LinearAlgebra.toArray2D(scaledCovariance)
+    val mvn              = new MultivariateGaussianDistribution(mean.rawVector, scaledCovArray)
     VectorContainer(mvn.rand())
   }
 

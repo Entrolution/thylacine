@@ -118,7 +118,7 @@ object LinearForwardModel {
       input: IndexedVectorCollection
     ): VectorContainer = {
       val rawInput = rawMappings.modelParameterCollectionToRawVector(input)
-      val result = LinearAlgebra.multiplyMV(rawMatrixTransform, rawInput)
+      val result   = LinearAlgebra.multiplyMV(rawMatrixTransform, rawInput)
       VectorContainer(applyOffset(result))
     }
 

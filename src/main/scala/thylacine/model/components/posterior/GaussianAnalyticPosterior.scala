@@ -149,21 +149,21 @@ object GaussianAnalyticPosterior {
 
         // tmContainer.rawMatrix.t * (lcContainer.rawMatrix \ tmContainer.rawMatrix)
         val tmTranspose = LinearAlgebra.transpose(tmContainer.rawMatrix)
-        val lcSolveTm = LinearAlgebra.solve(lcContainer.rawMatrix, tmContainer.rawMatrix)
-        val fisherInfo = LinearAlgebra.multiply(tmTranspose, lcSolveTm)
+        val lcSolveTm   = LinearAlgebra.solve(lcContainer.rawMatrix, tmContainer.rawMatrix)
+        val fisherInfo  = LinearAlgebra.multiply(tmTranspose, lcSolveTm)
 
         val newInverseCovariance = LinearAlgebra.add(newInversePriorCovariance, fisherInfo)
-        val newCovariance = LinearAlgebra.invert(newInverseCovariance)
+        val newCovariance        = LinearAlgebra.invert(newInverseCovariance)
 
         // In reality, this suffers from some pretty serious rounding errors
         // with all the multiple matrix inversions that need to happen
         // newInverseCovariance \ (pcContainer.rawMatrix \ pmContainer.rawVector +
         //   tmContainer.rawMatrix.t * (lcContainer.rawMatrix \ dContainer.rawVector))
-        val pcSolvePm = LinearAlgebra.solve(pcContainer.rawMatrix, pmContainer.rawVector)
-        val lcSolveD = LinearAlgebra.solve(lcContainer.rawMatrix, dContainer.rawVector)
+        val pcSolvePm                = LinearAlgebra.solve(pcContainer.rawMatrix, pmContainer.rawVector)
+        val lcSolveD                 = LinearAlgebra.solve(lcContainer.rawMatrix, dContainer.rawVector)
         val tmTransposeTimesLcSolveD = LinearAlgebra.multiplyMV(tmTranspose, lcSolveD)
-        val rhs = pcSolvePm.zip(tmTransposeTimesLcSolveD).map { case (a, b) => a + b }
-        val newMean = LinearAlgebra.solve(newInverseCovariance, rhs)
+        val rhs                      = pcSolvePm.zip(tmTransposeTimesLcSolveD).map { case (a, b) => a + b }
+        val newMean                  = LinearAlgebra.solve(newInverseCovariance, rhs)
 
         // (newCovariance + newCovariance.t) * 0.5
         val symmetricCovariance = LinearAlgebra.symmetrize(newCovariance)

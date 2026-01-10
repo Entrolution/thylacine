@@ -130,7 +130,7 @@ private[thylacine] object LinearAlgebra {
 
   // Computes (M + M^T) / 2 to ensure symmetry
   def symmetrize(m: DMatrixRMaj): DMatrixRMaj = {
-    val mt = transpose(m)
+    val mt  = transpose(m)
     val sum = add(m, mt)
     scale(sum, 0.5)
   }
