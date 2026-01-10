@@ -38,7 +38,9 @@ case class CartesianSurface[F[_]: STM: Async](
   private val scalarValues: TxnVar[F, Map[GraphPoint, Double]]
 ) {
 
+  @unused
   private val xScale = xAbscissa.max - xAbscissa.min
+  @unused
   private val yScale = yAbscissa.max - yAbscissa.min
 
   private val keys: Vector[GraphPoint] =
