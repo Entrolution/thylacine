@@ -21,8 +21,6 @@ import thylacine.model.core.GenericIdentifier.ModelParameterIdentifier
 import thylacine.model.core.values.IndexedVectorCollection.ModelParameterCollection
 import thylacine.model.core.values.{ IndexedVectorCollection, VectorContainer }
 
-import breeze.linalg.DenseVector
-
 import scala.annotation.unused
 
 private[thylacine] trait ModelParameterContext {
@@ -40,9 +38,9 @@ private[thylacine] trait ModelParameterContext {
     zeroModelParameterCollection.genericScalaRepresentation
 
   final private[thylacine] def rawVectorToModelParameterCollection(
-    input: DenseVector[Double]
+    input: Array[Double]
   ): ModelParameterCollection =
-    vectorValuesToModelParameterCollection(input.toArray.toVector)
+    vectorValuesToModelParameterCollection(input.toVector)
 
   final private[thylacine] def vectorValuesToModelParameterCollection(
     input: Vector[Double]
@@ -74,8 +72,6 @@ private[thylacine] trait ModelParameterContext {
 
   final private[thylacine] def modelParameterCollectionToRawVector(
     input: ModelParameterCollection
-  ): DenseVector[Double] =
-    DenseVector {
-      modelParameterCollectionToVectorValues(input).toArray
-    }
+  ): Array[Double] =
+    modelParameterCollectionToVectorValues(input).toArray
 }

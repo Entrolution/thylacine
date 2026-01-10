@@ -19,8 +19,7 @@ package thylacine.model.core.values
 
 import thylacine.model.core.CanValidate
 
-import breeze.linalg.*
-import cats.implicits.*
+import org.ejml.data.DMatrixRMaj
 
 import scala.Vector as ScalaVector
 
@@ -47,11 +46,10 @@ private[thylacine] case class MatrixContainer(
 
   // Low-level API
   // ------------------------
-  private[thylacine] lazy val rawMatrix: DenseMatrix[Double] = {
-    val matResult: DenseMatrix[Double] =
-      DenseMatrix.zeros[Double](rowTotalNumber, columnTotalNumber)
-    values.foreach { i =>
-      matResult.update(i._1._1 - 1, i._1._2 - 1, i._2)
+  private[thylacine] lazy val rawMatrix: DMatrixRMaj = {
+    val matResult = new DMatrixRMaj(rowTotalNumber, columnTotalNumber)
+    values.foreach { case ((row, col), value) =>
+      matResult.set(row - 1, col - 1, value)
     }
     matResult
   }

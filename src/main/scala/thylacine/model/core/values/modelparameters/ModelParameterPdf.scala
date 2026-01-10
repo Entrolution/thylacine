@@ -77,7 +77,7 @@ private[thylacine] trait ModelParameterPdf[F[_]] extends GenericScalarValuedMapp
       gradLogs <- logPdfGradientAt(input)
     } yield gradLogs.index.toList
       .map { gl =>
-        IndexedVectorCollection(gl._1, VectorContainer(pdf * gl._2.rawVector))
+        IndexedVectorCollection(gl._1, VectorContainer(gl._2.rawVector.map(_ * pdf)))
       }
       .reduce(_ rawMergeWith _)
 

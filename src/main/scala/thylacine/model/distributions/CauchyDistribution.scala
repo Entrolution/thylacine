@@ -19,12 +19,11 @@ package thylacine.model.distributions
 
 import thylacine.model.core.values.{ MatrixContainer, VectorContainer }
 import thylacine.model.core.{ CanValidate, RecordedData }
+import thylacine.util.LinearAlgebra
 
-import breeze.linalg.*
-import breeze.stats.distributions.*
-import org.apache.commons.math3.random.MersenneTwister
 import org.apache.commons.math3.special.Gamma.gamma
 import org.apache.commons.math3.util.FastMath
+import smile.stat.distribution.{ ChiSquareDistribution, MultivariateGaussianDistribution }
 
 private[thylacine] case class CauchyDistribution(
   mean: VectorContainer,
@@ -37,10 +36,6 @@ private[thylacine] case class CauchyDistribution(
     assert(covariance.rowTotalNumber == mean.dimension)
   }
 
-  implicit private val randBasis: RandBasis = new RandBasis(
-    new ThreadLocalRandomGenerator(new MersenneTwister(this.hashCode()))
-  )
-
   override private[thylacine] lazy val getValidated: CauchyDistribution =
     if (validated) {
       this
@@ -50,41 +45,42 @@ private[thylacine] case class CauchyDistribution(
 
   private lazy val logMultiplier = Math.log(gamma((1 + domainDimension) / 2.0)) - Math.log(
     gamma(0.5)
-  ) - domainDimension / 2.0 * Math.log(FastMath.PI) - Math.log(det(covariance.rawMatrix)) / 2.0
+  ) - domainDimension / 2.0 * Math.log(FastMath.PI) - Math.log(LinearAlgebra.determinant(covariance.rawMatrix)) / 2.0
 
   override val domainDimension: Int = mean.dimension
 
-  private lazy val rawInverseCovariance: DenseMatrix[Double] =
-    inv(covariance.rawMatrix)
+  private lazy val rawInverseCovariance =
+    LinearAlgebra.invert(covariance.rawMatrix)
 
   override private[thylacine] def logPdfAt(
     input: VectorContainer
   ): Double = {
-    val differentialFromMean = input.rawVector - mean.rawVector
+    val differentialFromMean = input.rawVector.zip(mean.rawVector).map { case (i, m) => i - m }
+    val quadForm             = LinearAlgebra.quadraticForm(differentialFromMean, rawInverseCovariance)
 
-    logMultiplier - (1.0 + domainDimension) / 2.0 * Math.log(
-      1 + differentialFromMean.t * rawInverseCovariance * differentialFromMean
-    )
+    logMultiplier - (1.0 + domainDimension) / 2.0 * Math.log(1 + quadForm)
   }
 
   override private[thylacine] def logPdfGradientAt(
     input: VectorContainer
   ): VectorContainer = {
-    val differentialFromMean = input.rawVector - mean.rawVector
-    val multiplierResult =
-      (1 + domainDimension) / (1 + differentialFromMean.t * rawInverseCovariance * differentialFromMean)
-    val vectorResult = rawInverseCovariance * differentialFromMean
+    val differentialFromMean = input.rawVector.zip(mean.rawVector).map { case (i, m) => i - m }
+    val quadForm             = LinearAlgebra.quadraticForm(differentialFromMean, rawInverseCovariance)
+    val multiplierResult     = (1 + domainDimension) / (1 + quadForm)
+    val vectorResult         = LinearAlgebra.multiplyMV(rawInverseCovariance, differentialFromMean)
 
-    VectorContainer(multiplierResult * vectorResult)
+    VectorContainer(vectorResult.map(_ * multiplierResult))
   }
 
-  private lazy val chiSquared = ChiSquared(1)
+  private lazy val chiSquared = new ChiSquareDistribution(1)
 
   // Leveraging connection to Gamma and Gaussian distributions
-  private[thylacine] def getRawSample: VectorContainer =
-    VectorContainer(
-      MultivariateGaussian(mean.rawVector, covariance.rawMatrix / chiSquared.sample()).sample()
-    )
+  private[thylacine] def getRawSample: VectorContainer = {
+    val scaledCovariance = LinearAlgebra.divide(covariance.rawMatrix, chiSquared.rand())
+    val scaledCovArray   = LinearAlgebra.toArray2D(scaledCovariance)
+    val mvn              = new MultivariateGaussianDistribution(mean.rawVector, scaledCovArray)
+    VectorContainer(mvn.rand())
+  }
 
 }
 

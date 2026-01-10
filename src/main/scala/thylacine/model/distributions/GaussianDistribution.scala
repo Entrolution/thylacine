@@ -19,10 +19,9 @@ package thylacine.model.distributions
 
 import thylacine.model.core.values.{ MatrixContainer, VectorContainer }
 import thylacine.model.core.{ CanValidate, RecordedData }
+import thylacine.util.LinearAlgebra
 
-import breeze.linalg.*
-import breeze.stats.distributions.*
-import org.apache.commons.math3.random.MersenneTwister
+import smile.stat.distribution.MultivariateGaussianDistribution
 
 private[thylacine] case class GaussianDistribution(
   mean: VectorContainer,
@@ -35,10 +34,6 @@ private[thylacine] case class GaussianDistribution(
     assert(covariance.rowTotalNumber == mean.dimension)
   }
 
-  implicit private val randBasis: RandBasis = new RandBasis(
-    new ThreadLocalRandomGenerator(new MersenneTwister(this.hashCode()))
-  )
-
   override private[thylacine] lazy val getValidated: GaussianDistribution =
     if (validated) {
       this
@@ -49,23 +44,23 @@ private[thylacine] case class GaussianDistribution(
   override val domainDimension: Int = mean.dimension
 
   // Low-level API
-  private[thylacine] lazy val rawDistribution: MultivariateGaussian =
-    MultivariateGaussian(mean.rawVector, covariance.rawMatrix)
+  private[thylacine] lazy val rawDistribution: MultivariateGaussianDistribution =
+    new MultivariateGaussianDistribution(mean.rawVector, covariance.genericScalaRepresentation.map(_.toArray).toArray)
 
-  private lazy val rawInverseCovariance: DenseMatrix[Double] =
-    inv(covariance.rawMatrix)
+  private lazy val rawInverseCovariance =
+    LinearAlgebra.invert(covariance.rawMatrix)
 
   override private[thylacine] def logPdfAt(
     input: VectorContainer
   ): Double =
-    rawDistribution.logPdf(input.rawVector)
+    rawDistribution.logp(input.rawVector)
 
   override private[thylacine] def logPdfGradientAt(
     input: VectorContainer
-  ): VectorContainer =
-    VectorContainer(
-      rawInverseCovariance * (mean.rawVector - input.rawVector)
-    )
+  ): VectorContainer = {
+    val diff = mean.rawVector.zip(input.rawVector).map { case (m, i) => m - i }
+    VectorContainer(LinearAlgebra.multiplyMV(rawInverseCovariance, diff))
+  }
 
 }
 

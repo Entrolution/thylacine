@@ -23,10 +23,11 @@ import thylacine.model.core.*
 import thylacine.model.core.computation.CachedComputation
 import thylacine.model.core.values.*
 import thylacine.model.core.values.modelparameters.ModelParameterContext
+import thylacine.util.LinearAlgebra
 
-import breeze.linalg.{ DenseMatrix, DenseVector }
 import cats.effect.kernel.Async
 import cats.syntax.all.*
+import org.ejml.data.DMatrixRMaj
 
 import scala.annotation.unused
 
@@ -90,7 +91,7 @@ object LinearForwardModel {
         .toVector
         .sortBy(_._1.value)
 
-    val rawMatrixTransform: DenseMatrix[Double] =
+    val rawMatrixTransform: DMatrixRMaj =
       orderedLabelsAndDimensions
         .map(_._1)
         .foldLeft(
@@ -100,8 +101,13 @@ object LinearForwardModel {
         }
         .rawMatrix
 
-    def applyOffset(input: DenseVector[Double]): DenseVector[Double] =
-      vectorOffset.map(_.rawVector + input).getOrElse(input)
+    def applyOffset(input: Array[Double]): Array[Double] =
+      vectorOffset match {
+        case Some(offset) =>
+          input.zip(offset.rawVector).map { case (i, o) => i + o }
+        case None =>
+          input
+      }
 
     val rawMappings = new ModelParameterContext {
       override private[thylacine] val orderedParameterIdentifiersWithDimension =
@@ -110,8 +116,11 @@ object LinearForwardModel {
 
     def transformedEval(
       input: IndexedVectorCollection
-    ): VectorContainer =
-      VectorContainer(applyOffset(rawMatrixTransform * rawMappings.modelParameterCollectionToRawVector(input)))
+    ): VectorContainer = {
+      val rawInput = rawMappings.modelParameterCollectionToRawVector(input)
+      val result   = LinearAlgebra.multiplyMV(rawMatrixTransform, rawInput)
+      VectorContainer(applyOffset(result))
+    }
 
     def dummyMapping(@unused input: IndexedVectorCollection): IndexedMatrixCollection =
       IndexedMatrixCollection(index = Map())

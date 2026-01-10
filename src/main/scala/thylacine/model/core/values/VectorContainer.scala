@@ -20,8 +20,6 @@ package thylacine.model.core.values
 import thylacine.model.core.CanValidate
 import thylacine.util.MathOps
 
-import breeze.linalg.*
-
 import scala.Vector as ScalaVector
 
 private[thylacine] case class VectorContainer(
@@ -40,11 +38,10 @@ private[thylacine] case class VectorContainer(
     if (validated) this else this.copy(values = values.filter(_._2 != 0d), validated = true)
 
   // Low-level API
-  private[thylacine] lazy val rawVector: DenseVector[Double] = {
-    val vecResult =
-      DenseVector.zeros[Double](dimension)
-    values.foreach { i =>
-      vecResult.update(i._1 - 1, i._2)
+  private[thylacine] lazy val rawVector: Array[Double] = {
+    val vecResult = Array.fill(dimension)(0.0)
+    values.foreach { case (idx, value) =>
+      vecResult(idx - 1) = value
     }
     vecResult
   }
@@ -56,7 +53,7 @@ private[thylacine] case class VectorContainer(
     Math.sqrt(squaredMagnitude)
 
   private[thylacine] lazy val scalaVector: ScalaVector[Double] =
-    rawVector.toScalaVector
+    rawVector.toVector
 
   private[thylacine] lazy val valueSum: Double = values.values.sum
 
@@ -135,8 +132,8 @@ private[thylacine] object VectorContainer {
     ).getValidated
   }
 
-  private[thylacine] def apply(vector: DenseVector[Double]): VectorContainer =
-    VectorContainer(vector.toArray.toVector)
+  private[thylacine] def apply(vector: Array[Double]): VectorContainer =
+    VectorContainer(vector.toVector)
 
   private[thylacine] def fill(dimension: Int)(value: Double): VectorContainer =
     VectorContainer((1 to dimension).map(_ => value).toVector)

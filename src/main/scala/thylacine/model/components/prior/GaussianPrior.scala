@@ -22,8 +22,8 @@ import thylacine.model.core.*
 import thylacine.model.core.values.{ MatrixContainer, VectorContainer }
 import thylacine.model.distributions.GaussianDistribution
 
-import breeze.stats.distributions.MultivariateGaussian
 import cats.effect.kernel.Async
+import smile.stat.distribution.MultivariateGaussianDistribution
 
 import scala.annotation.unused
 
@@ -37,7 +37,7 @@ case class GaussianPrior[F[_]: Async](
   override protected lazy val priorDistribution: GaussianDistribution =
     GaussianDistribution(priorData)
 
-  private lazy val rawDistribution: MultivariateGaussian =
+  private lazy val rawDistribution: MultivariateGaussianDistribution =
     priorDistribution.rawDistribution
 
   override private[thylacine] lazy val getValidated: GaussianPrior[F] =
@@ -45,16 +45,16 @@ case class GaussianPrior[F[_]: Async](
     else this.copy(priorData = priorData.getValidated, validated = true)
 
   override protected def rawSampleModelParameters: F[VectorContainer] =
-    Async[F].delay(VectorContainer(rawDistribution.sample()))
+    Async[F].delay(VectorContainer(rawDistribution.rand()))
 
   // Testing
   private[thylacine] lazy val mean: Vector[Double] =
-    rawDistribution.mean.toScalaVector
+    rawDistribution.mean.toVector
 
   private[thylacine] lazy val covariance: Vector[Double] =
-    rawDistribution.covariance.toArray.toVector
+    rawDistribution.cov.toArray.flatMap(_.toArray).toVector
 
-  lazy val entropy: Double = rawDistribution.entropy
+  lazy val entropy: Double = rawDistribution.entropy()
 }
 
 object GaussianPrior {

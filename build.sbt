@@ -1,4 +1,4 @@
-ThisBuild / tlBaseVersion := "0.10"
+ThisBuild / tlBaseVersion := "0.11"
 
 ThisBuild / organization     := "ai.entrolution"
 ThisBuild / organizationName := "Greg von Nessi"
@@ -7,6 +7,9 @@ ThisBuild / licenses         := Seq(License.Apache2)
 ThisBuild / developers ++= List(
   tlGitHubDev("gvonness", "Greg von Nessi")
 )
+
+// CI configuration - Java 21 required for Smile 3.x
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("21"))
 
 scalaVersion                   := DependencyVersions.scala2p13Version
 ThisBuild / crossScalaVersions := Seq(DependencyVersions.scala2p13Version)

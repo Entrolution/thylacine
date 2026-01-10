@@ -38,7 +38,9 @@ case class CartesianSurface[F[_]: STM: Async](
   private val scalarValues: TxnVar[F, Map[GraphPoint, Double]]
 ) {
 
+  @unused
   private val xScale = xAbscissa.max - xAbscissa.min
+  @unused
   private val yScale = yAbscissa.max - yAbscissa.min
 
   private val keys: Vector[GraphPoint] =
@@ -48,6 +50,7 @@ case class CartesianSurface[F[_]: STM: Async](
       }
     }
 
+  @unused
   private val normaliseColumns: Txn[Unit] = {
     for {
       values <- scalarValues.get
@@ -78,11 +81,13 @@ case class CartesianSurface[F[_]: STM: Async](
     } yield ()
   }
 
+  @unused
   private val zeroValuesSpec =
     keys.traverse { p =>
       scalarValues.modify(i => i + (p -> 0d)).commit.map(_ => ())
     }
 
+  @unused
   private def addSimplexChain(
     input: SimplexChain,
     kernelVariance: Double
@@ -91,6 +96,7 @@ case class CartesianSurface[F[_]: STM: Async](
       concatenateMapping(pvs, input, kernelVariance).map(_.toMap)
     }.commit
 
+  @unused
   private def addValues(
     abscissa: Vector[Double],
     values: Vector[Double],
@@ -107,6 +113,7 @@ case class CartesianSurface[F[_]: STM: Async](
       _ <- addSimplexChain(chain, kernelVariance)
     } yield ()
 
+  @unused
   private def concatenateMapping(
     startMap: Map[GraphPoint, Double],
     chain: SimplexChain,
