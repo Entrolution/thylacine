@@ -24,6 +24,7 @@ import thylacine.model.core.values.IndexedVectorCollection.ModelParameterCollect
 import thylacine.model.core.values.modelparameters.ModelParameterPdf
 import thylacine.model.core.values.{ IndexedVectorCollection, VectorContainer }
 import thylacine.model.distributions.Distribution
+import thylacine.util.LinearAlgebra
 
 import cats.effect.kernel.Async
 import cats.syntax.all.*
@@ -57,9 +58,11 @@ trait Likelihood[F[_], +FM <: ForwardModel[F], +D <: Distribution]
       measGrad   <- Async[F].delay(observationDistribution.logPdfGradientAt(mappedVec))
     } yield forwardJac.index.toList
       .map { fj =>
+        // Compute gradient: J^T * g where J is Jacobian and g is measurement gradient
+        val jacobianTranspose = LinearAlgebra.transpose(fj._2.rawMatrix)
         IndexedVectorCollection(
           fj._1,
-          VectorContainer((measGrad.rawVector.t * fj._2.rawMatrix).t)
+          VectorContainer(LinearAlgebra.multiplyMV(jacobianTranspose, measGrad.rawVector))
         )
       }
       .reduce(_ rawMergeWith _)

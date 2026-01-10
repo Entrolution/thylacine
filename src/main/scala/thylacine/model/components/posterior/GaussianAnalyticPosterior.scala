@@ -25,12 +25,11 @@ import thylacine.model.core.*
 import thylacine.model.core.values.IndexedVectorCollection.ModelParameterCollection
 import thylacine.model.core.values.{ MatrixContainer, VectorContainer }
 import thylacine.model.sampling.ModelParameterSampler
+import thylacine.util.LinearAlgebra
 
-import breeze.linalg.*
-import breeze.stats.distributions.*
 import cats.effect.kernel.Async
 import cats.syntax.all.*
-import org.apache.commons.math3.random.MersenneTwister
+import smile.stat.distribution.MultivariateGaussianDistribution
 
 import scala.annotation.unused
 import scala.Vector as ScalaVector
@@ -71,12 +70,12 @@ case class GaussianAnalyticPosterior[F[_]: Async](
   @unused
   lazy val maxLogPdf: F[Double] = logPdfAt(mean)
 
-  lazy val entropy: Double = rawDistribution.entropy
+  lazy val entropy: Double = rawDistribution.entropy()
 
   @unused
   lazy val priorEntropies: Set[Double] = priors.map(_.entropy)
 
-  private lazy val rawDistribution: MultivariateGaussian = {
+  private lazy val rawDistribution: MultivariateGaussianDistribution = {
     val priorsAdded: AnalyticPosteriorAccumulation[F] =
       priors.toVector
         .foldLeft(
@@ -97,15 +96,15 @@ case class GaussianAnalyticPosterior[F[_]: Async](
 
   // For testing only
   lazy val covarianceStridedVector: ScalaVector[Double] =
-    rawDistribution.covariance.toArray.toVector
+    rawDistribution.cov.toArray.flatMap(_.toArray).toVector
 
   override private[thylacine] def logPdfAt(
     input: ModelParameterCollection
   ): F[Double] =
-    Async[F].delay(rawDistribution.logPdf(modelParameterCollectionToRawVector(input)))
+    Async[F].delay(rawDistribution.logp(modelParameterCollectionToRawVector(input)))
 
   final override protected def rawSampleModelParameters: F[VectorContainer] =
-    Async[F].delay(VectorContainer(rawDistribution.sample()))
+    Async[F].delay(VectorContainer(rawDistribution.rand()))
 
   private def sampleModelParameters: F[ModelParameterCollection] =
     rawSampleModelParameters.map(s => rawVectorToModelParameterCollection(s.rawVector))
@@ -138,7 +137,7 @@ object GaussianAnalyticPosterior {
     orderedParameterIdentifiersWithDimension: ScalaVector[(ModelParameterIdentifier, Int)]
   ) {
 
-    private[thylacine] lazy val gRawDistribution: MultivariateGaussian =
+    private[thylacine] lazy val gRawDistribution: MultivariateGaussianDistribution =
       (for {
         pmContainer <- priorMean
         pcContainer <- priorCovariance
@@ -146,24 +145,30 @@ object GaussianAnalyticPosterior {
         lcContainer <- likelihoodCovariance
         tmContainer <- likelihoodTransformations
       } yield {
-        val newInversePriorCovariance = inv(pcContainer.rawMatrix)
-        val newInverseCovariance =
-          newInversePriorCovariance + (tmContainer.rawMatrix.t * (lcContainer.rawMatrix \ tmContainer.rawMatrix))
-        val newCovariance = inv(newInverseCovariance)
+        val newInversePriorCovariance = LinearAlgebra.invert(pcContainer.rawMatrix)
 
-        // In reality, this is suffers from some pretty serious rounding errors
+        // tmContainer.rawMatrix.t * (lcContainer.rawMatrix \ tmContainer.rawMatrix)
+        val tmTranspose = LinearAlgebra.transpose(tmContainer.rawMatrix)
+        val lcSolveTm = LinearAlgebra.solve(lcContainer.rawMatrix, tmContainer.rawMatrix)
+        val fisherInfo = LinearAlgebra.multiply(tmTranspose, lcSolveTm)
+
+        val newInverseCovariance = LinearAlgebra.add(newInversePriorCovariance, fisherInfo)
+        val newCovariance = LinearAlgebra.invert(newInverseCovariance)
+
+        // In reality, this suffers from some pretty serious rounding errors
         // with all the multiple matrix inversions that need to happen
-        val newMean =
-          newInverseCovariance \ (pcContainer.rawMatrix \ pmContainer.rawVector +
-            tmContainer.rawMatrix.t * (lcContainer.rawMatrix \ dContainer.rawVector))
+        // newInverseCovariance \ (pcContainer.rawMatrix \ pmContainer.rawVector +
+        //   tmContainer.rawMatrix.t * (lcContainer.rawMatrix \ dContainer.rawVector))
+        val pcSolvePm = LinearAlgebra.solve(pcContainer.rawMatrix, pmContainer.rawVector)
+        val lcSolveD = LinearAlgebra.solve(lcContainer.rawMatrix, dContainer.rawVector)
+        val tmTransposeTimesLcSolveD = LinearAlgebra.multiplyMV(tmTranspose, lcSolveD)
+        val rhs = pcSolvePm.zip(tmTransposeTimesLcSolveD).map { case (a, b) => a + b }
+        val newMean = LinearAlgebra.solve(newInverseCovariance, rhs)
 
-        implicit val randBasis: RandBasis = new RandBasis(
-          new ThreadLocalRandomGenerator(
-            new MersenneTwister((newCovariance, newMean).hashCode())
-          )
-        )
+        // (newCovariance + newCovariance.t) * 0.5
+        val symmetricCovariance = LinearAlgebra.symmetrize(newCovariance)
 
-        MultivariateGaussian(newMean, (newCovariance + newCovariance.t) * 0.5)
+        new MultivariateGaussianDistribution(newMean, LinearAlgebra.toArray2D(symmetricCovariance))
       }).getOrElse(
         throw new RuntimeException("Can't create posterior Gaussian distribution: A term is missing")
       )
