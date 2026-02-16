@@ -11,8 +11,8 @@ ThisBuild / developers ++= List(
 // CI configuration - Java 21 required for Smile 3.x
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("21"))
 
-scalaVersion                   := DependencyVersions.scala2p13Version
-ThisBuild / crossScalaVersions := Seq(DependencyVersions.scala2p13Version, DependencyVersions.scala3Version)
+scalaVersion                    := DependencyVersions.scala2p13Version
+ThisBuild / crossScalaVersions  := Seq(DependencyVersions.scala2p13Version, DependencyVersions.scala3Version)
 ThisBuild / tlVersionIntroduced := Map("3" -> "0.13")
 
 Global / idePackagePrefix := Some("ai.entrolution")
