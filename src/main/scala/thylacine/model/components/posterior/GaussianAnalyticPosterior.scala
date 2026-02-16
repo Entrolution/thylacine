@@ -179,12 +179,12 @@ object GaussianAnalyticPosterior {
         .copy(
           priorMean = Some(
             this.priorMean
-              .map(_ rawConcatenateWith incomingPriorMean)
+              .map(_.rawConcatenateWith(incomingPriorMean))
               .getOrElse(incomingPriorMean)
           ),
           priorCovariance = Some(
             this.priorCovariance
-              .map(_ diagonalMergeWith incomingPriorCovariance)
+              .map(_.diagonalMergeWith(incomingPriorCovariance))
               .getOrElse(incomingPriorCovariance)
           )
         )
@@ -202,25 +202,25 @@ object GaussianAnalyticPosterior {
             MatrixContainer.zeros(likelihood.forwardModel.rangeDimension, id._2)
           )
         }
-        .reduce(_ columnMergeWith _)
+        .reduce(_.columnMergeWith(_))
 
       this.copy(
         data = Some(
           this.data
-            .map(_ rawConcatenateWith incomingData)
+            .map(_.rawConcatenateWith(incomingData))
             .getOrElse(incomingData)
         ),
         likelihoodCovariance = Some(
           this.likelihoodCovariance
             .map(
-              _ diagonalMergeWith incomingDataCovariance
+              _.diagonalMergeWith(incomingDataCovariance)
             )
             .getOrElse(incomingDataCovariance)
         ),
         likelihoodTransformations = Some(
           this.likelihoodTransformations
             .map(
-              _ rowMergeWith incomingTransformationMatrix
+              _.rowMergeWith(incomingTransformationMatrix)
             )
             .getOrElse(incomingTransformationMatrix)
         )

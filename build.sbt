@@ -20,13 +20,7 @@ Global / excludeLintKeys += idePackagePrefix
 
 lazy val commonSettings = Seq(
   scalaVersion := DependencyVersions.scala2p13Version,
-  scalacOptions ++= Seq(
-    "-deprecation",
-    "-feature",
-    "-unchecked",
-    "-encoding",
-    "UTF-8"
-  ) ++ (
+  scalacOptions ++= (
     if (scalaVersion.value.startsWith("2."))
       Seq("-Xlint:_", "-Ywarn-unused:-implicits", "-Ywarn-value-discard", "-Ywarn-dead-code")
     else
