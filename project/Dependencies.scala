@@ -5,11 +5,11 @@ object DependencyVersions {
 
   val bengalStmVersion           = "0.9.5"
   val bigMathVersion             = "2.3.2"
-  val catsEffectVersion          = "3.4.8"
-  val catsEffectTestingVersion   = "1.4.0"
-  val commonMathVersion          = "3.6.1"
+  val catsEffectVersion          = "3.6.3"
+  val catsEffectTestingVersion   = "1.7.0"
+  val scalaTestVersion           = "3.2.19"
   val ejmlVersion                = "0.44.0"
-  val parallelCollectionsVersion = "1.0.4"
+  val parallelCollectionsVersion = "1.2.0"
   val smileVersion               = "3.1.1"
 }
 
@@ -22,14 +22,14 @@ object Dependencies {
   private val bigMath: ModuleID =
     "ch.obermuhlner" % "big-math" % bigMathVersion
 
-  private val commonMath: ModuleID =
-    "org.apache.commons" % "commons-math3" % commonMathVersion
-
   private val catsEffect: ModuleID =
     "org.typelevel" %% "cats-effect" % catsEffectVersion
 
   private val catsEffectTesting: ModuleID =
     "org.typelevel" %% "cats-effect-testing-scalatest" % catsEffectTestingVersion % "test"
+
+  private val scalaTest: ModuleID =
+    "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
 
   private val ejml: ModuleID =
     "org.ejml" % "ejml-all" % ejmlVersion
@@ -46,7 +46,7 @@ object Dependencies {
       bigMath,
       catsEffect,
       catsEffectTesting,
-      commonMath,
+      scalaTest,
       ejml,
       parallelCollections,
       smile

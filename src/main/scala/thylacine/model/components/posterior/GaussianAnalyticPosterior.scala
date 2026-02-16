@@ -31,7 +31,6 @@ import cats.effect.kernel.Async
 import cats.syntax.all.*
 import smile.stat.distribution.MultivariateGaussianDistribution
 
-import scala.annotation.unused
 import scala.Vector as ScalaVector
 
 case class GaussianAnalyticPosterior[F[_]: Async](
@@ -43,16 +42,17 @@ case class GaussianAnalyticPosterior[F[_]: Async](
     with ModelParameterSampler[F]
     with CanValidate[GaussianAnalyticPosterior[F]] {
   if (!validated) {
-    // Ensure there are no conflicting identifiers.
-    assert(priors.size == priors.map(_.identifier).size)
-    assert(
-      likelihoods.size == likelihoods.map(_.posteriorTermIdentifier).size
+    require(priors.size == priors.map(_.identifier).size, "Prior identifiers must be unique")
+    require(
+      likelihoods.size == likelihoods.map(_.posteriorTermIdentifier).size,
+      "Likelihood identifiers must be unique"
     )
-    assert(
+    require(
       priors
         .map((i: GaussianPrior[F]) => i.posteriorTermIdentifier)
         .intersect(likelihoods.map(_.posteriorTermIdentifier))
-        .isEmpty
+        .isEmpty,
+      "Prior and likelihood identifiers must not overlap"
     )
   }
 
@@ -67,13 +67,7 @@ case class GaussianAnalyticPosterior[F[_]: Async](
       )
     }
 
-  @unused
-  lazy val maxLogPdf: F[Double] = logPdfAt(mean)
-
   lazy val entropy: Double = rawDistribution.entropy()
-
-  @unused
-  lazy val priorEntropies: Set[Double] = priors.map(_.entropy)
 
   private lazy val rawDistribution: MultivariateGaussianDistribution = {
     val priorsAdded: AnalyticPosteriorAccumulation[F] =

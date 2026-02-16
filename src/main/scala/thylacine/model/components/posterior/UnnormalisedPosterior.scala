@@ -33,16 +33,17 @@ case class UnnormalisedPosterior[F[_]: Async](
     with Posterior[F, Prior[F, ?], Likelihood[F, ?, ?]]
     with CanValidate[UnnormalisedPosterior[F]] {
   if (!validated) {
-    // Ensure there are no conflicting identifiers.
-    assert(priors.size == priors.map(_.identifier).size)
-    assert(
-      likelihoods.size == likelihoods.map(_.posteriorTermIdentifier).size
+    require(priors.size == priors.map(_.identifier).size, "Prior identifiers must be unique")
+    require(
+      likelihoods.size == likelihoods.map(_.posteriorTermIdentifier).size,
+      "Likelihood identifiers must be unique"
     )
-    assert(
+    require(
       priors
         .map(_.posteriorTermIdentifier)
         .intersect(likelihoods.map(_.posteriorTermIdentifier))
-        .isEmpty
+        .isEmpty,
+      "Prior and likelihood identifiers must not overlap"
     )
   }
 

@@ -19,14 +19,11 @@ package thylacine.model.core.computation
 
 import thylacine.model.core.values.*
 
-import scala.annotation.unused
-
 private[thylacine] case class FiniteDifferenceJacobian(
   private val evalAt: IndexedVectorCollection => VectorContainer,
   differential: Double
 ) {
 
-  @unused
   private[thylacine] def finiteDifferenceJacobianAt(
     input: IndexedVectorCollection
   ): IndexedMatrixCollection = {

@@ -35,7 +35,10 @@ case class GaussianLikelihood[F[_]: Async, T <: ForwardModel[F]](
 ) extends AsyncImplicits[F]
     with Likelihood[F, T, GaussianDistribution] {
   if (!validated) {
-    assert(forwardModel.rangeDimension == observations.data.dimension)
+    require(
+      forwardModel.rangeDimension == observations.data.dimension,
+      "Forward model range dimension must match observation dimension"
+    )
   }
 
   override private[thylacine] lazy val getValidated: GaussianLikelihood[F, T] =

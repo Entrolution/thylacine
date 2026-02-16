@@ -95,15 +95,11 @@ private[thylacine] case class QuadratureDomainTelemetry(
       acceptances.toDouble / (acceptances + newRejection)
     if (newAcceptanceRatio > nominalAcceptance) {
       this.copy(
-        //        currentScaleFactor =
-        //          Math.min(currentScaleFactor + (1.0 - currentScaleFactor) / 2.0, 1.0),
         rejections      = newRejection,
         rejectionStreak = rejectionStreak + 1
       )
     } else if (newAcceptanceRatio < nominalAcceptance) {
       this.copy(
-        //        currentScaleFactor =
-        //          Math.max(currentScaleFactor / 2.0, Double.MinPositiveValue),
         rejections      = newRejection,
         rejectionStreak = rejectionStreak + 1
       )

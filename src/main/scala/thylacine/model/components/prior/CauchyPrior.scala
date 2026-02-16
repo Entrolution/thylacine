@@ -52,7 +52,7 @@ object CauchyPrior {
     values: Vector[Double],
     confidenceIntervals: Vector[Double]
   ): CauchyPrior[F] = {
-    assert(values.size == confidenceIntervals.size)
+    require(values.size == confidenceIntervals.size, "Values and confidence intervals must have the same size")
     CauchyPrior(
       identifier = ModelParameterIdentifier(label),
       priorData = RecordedData(

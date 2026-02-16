@@ -38,7 +38,7 @@ case class UniformLikelihood[F[_]: Async, T <: ForwardModel[F]](
 ) extends AsyncImplicits[F]
     with Likelihood[F, T, UniformDistribution] {
   if (!validated) {
-    assert(lowerBounds.dimension == upperBounds.dimension)
+    require(lowerBounds.dimension == upperBounds.dimension, "Lower and upper bounds must have the same dimension")
   }
 
   override private[thylacine] lazy val getValidated: UniformLikelihood[F, T] =

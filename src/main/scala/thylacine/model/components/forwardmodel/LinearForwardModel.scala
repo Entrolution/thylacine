@@ -44,9 +44,13 @@ case class LinearForwardModel[F[_]: STM: Async](
 ) extends StmImplicits[F]
     with InMemoryMemoizedForwardModel[F] {
   if (!validated) {
-    assert(transform.index.map(_._2.rowTotalNumber).toSet.size == 1)
-    assert(
-      vectorOffset.forall(vo => vo.dimension == transform.index.head._2.rowTotalNumber)
+    require(
+      transform.index.map(_._2.rowTotalNumber).toSet.size == 1,
+      "All transform blocks must have the same row dimension"
+    )
+    require(
+      vectorOffset.forall(vo => vo.dimension == transform.index.head._2.rowTotalNumber),
+      "Vector offset dimension must match transform row dimension"
     )
   }
 

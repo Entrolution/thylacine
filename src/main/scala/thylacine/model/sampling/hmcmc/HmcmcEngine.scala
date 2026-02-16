@@ -95,10 +95,6 @@ private[thylacine] trait HmcmcEngine[F[_]] extends ModelParameterSampler[F] {
     samples: Set[ModelParameterCollection] = Set()
   ): F[Set[ModelParameterCollection]] = {
     val simulationSpec: F[Set[ModelParameterCollection]] = (for {
-      _ <- Async[F].ifM(Async[F].pure(burnIn))(
-             Async[F].delay(print(s"\rHMCMC Sampling :: Burn-in Iteration - $iterationCount/$warmUpSimulationCount")),
-             Async[F].unit
-           )
       negLogPdf <- logPdfOpt match {
                      case Some(res) => Async[F].pure(res)
                      case _ => logPdfAt(input).map(_ * -1)
@@ -193,7 +189,6 @@ private[thylacine] trait HmcmcEngine[F[_]] extends ModelParameterSampler[F] {
                    numberOfRequestedSamples = 1,
                    iterationCount           = 0
                  )
-      _ <- Async[F].delay(print(s"\nHMCMC Sampling :: Burn-in complete!\n"))
     } yield results.head
 
   /*
