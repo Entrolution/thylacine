@@ -1,4 +1,4 @@
-ThisBuild / tlBaseVersion := "0.12"
+ThisBuild / tlBaseVersion := "0.13"
 
 ThisBuild / organization     := "ai.entrolution"
 ThisBuild / organizationName := "Greg von Nessi"
@@ -12,7 +12,8 @@ ThisBuild / developers ++= List(
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("21"))
 
 scalaVersion                   := DependencyVersions.scala2p13Version
-ThisBuild / crossScalaVersions := Seq(DependencyVersions.scala2p13Version)
+ThisBuild / crossScalaVersions := Seq(DependencyVersions.scala2p13Version, DependencyVersions.scala3Version)
+ThisBuild / tlVersionIntroduced := Map("3" -> "0.13")
 
 Global / idePackagePrefix := Some("ai.entrolution")
 Global / excludeLintKeys += idePackagePrefix
@@ -24,11 +25,12 @@ lazy val commonSettings = Seq(
     "-feature",
     "-unchecked",
     "-encoding",
-    "UTF-8",
-    "-Xlint:_",
-    "-Ywarn-unused:-implicits",
-    "-Ywarn-value-discard",
-    "-Ywarn-dead-code"
+    "UTF-8"
+  ) ++ (
+    if (scalaVersion.value.startsWith("2."))
+      Seq("-Xlint:_", "-Ywarn-unused:-implicits", "-Ywarn-value-discard", "-Ywarn-dead-code")
+    else
+      Seq("-Wunused:all")
   )
 )
 
@@ -38,6 +40,7 @@ lazy val thylacine = (project in file("."))
     name := "thylacine",
     libraryDependencies ++= Dependencies.thylacine,
     crossScalaVersions := Seq(
-      DependencyVersions.scala2p13Version
+      DependencyVersions.scala2p13Version,
+      DependencyVersions.scala3Version
     )
   )

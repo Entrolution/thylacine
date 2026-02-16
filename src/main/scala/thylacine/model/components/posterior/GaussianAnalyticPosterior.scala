@@ -29,6 +29,7 @@ import thylacine.util.LinearAlgebra
 
 import cats.effect.kernel.Async
 import cats.syntax.all.*
+import smile.math.matrix.Matrix
 import smile.stat.distribution.MultivariateGaussianDistribution
 
 import scala.Vector as ScalaVector
@@ -162,7 +163,7 @@ object GaussianAnalyticPosterior {
         // (newCovariance + newCovariance.t) * 0.5
         val symmetricCovariance = LinearAlgebra.symmetrize(newCovariance)
 
-        new MultivariateGaussianDistribution(newMean, LinearAlgebra.toArray2D(symmetricCovariance))
+        new MultivariateGaussianDistribution(newMean, Matrix.of(LinearAlgebra.toArray2D(symmetricCovariance)))
       }).getOrElse(
         throw new IllegalStateException(
           "Cannot create posterior Gaussian distribution: required prior or likelihood term is missing"
