@@ -1,9 +1,12 @@
 # Thylacine
 
-![Build Status](https://github.com/gvonness/thylacine/actions/workflows/build.yml/badge.svg)
-[![Maven Central](https://img.shields.io/maven-central/v/ai.entrolution/thylacine_2.13)](https://maven-badges.herokuapp.com/maven-central/ai.entrolution/thylacine_2.13)
+[![CI](https://github.com/gvonness-apolitical/thylacine/actions/workflows/ci.yml/badge.svg)](https://github.com/gvonness-apolitical/thylacine/actions/workflows/ci.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/ai.entrolution/thylacine_2.13)](https://central.sonatype.com/artifact/ai.entrolution/thylacine_2.13)
+![Scala 2.13](https://img.shields.io/badge/Scala-2.13-red?logo=scala)
+![Scala 3](https://img.shields.io/badge/Scala-3-red?logo=scala)
+![Java 21+](https://img.shields.io/badge/Java-21%2B-blue?logo=openjdk)
 
-First, let me say this work is very much a WIP; please be patient :).
+Thylacine is under active development. The core inference engine, algorithms, and API are functional and published to Maven Central, but the framework continues to evolve.
 
 Thylacine is a FP (Functional Programming) Bayesian inference framework that facilitates sampling, integration and
 subsequent statistical analysis on posterior distributions born out of a Bayesian inference.
@@ -57,7 +60,7 @@ The theory of Bayesian inference is too vast to cover here. However, two referen
 
 ## Quick Start
 
-To use Thylacine in an existing SBT project with Scala 2.13 or a later version, add the following dependency to your
+To use Thylacine in an existing SBT project with Scala 2.13 or 3, add the following dependency to your
 `build.sbt`:
 
 ```scala
@@ -66,11 +69,54 @@ libraryDependencies += "ai.entrolution" %% "thylacine" % VERSION
 
 See the Maven badge above for the latest version.
 
+### Example: 1D Bayesian Update
+
+A Gaussian prior combined with a Gaussian likelihood yields an analytic posterior.
+This example infers a single parameter `x` with a `N(0, 1)` prior and an observation
+`y = 2` with measurement variance `1`, giving a posterior of `N(1, 0.5)`.
+
+```scala
+import ai.entrolution.thylacine.model.components.likelihood.GaussianLinearLikelihood
+import ai.entrolution.thylacine.model.components.posterior.GaussianAnalyticPosterior
+import ai.entrolution.thylacine.model.components.prior.GaussianPrior
+import bengal.stm.STM
+import cats.effect.{IO, IOApp}
+
+object BayesianUpdateExample extends IOApp.Simple {
+  def run: IO[Unit] =
+    STM.runtime[IO].flatMap { implicit stm =>
+      val prior = GaussianPrior.fromConfidenceIntervals[IO](
+        label               = "x",
+        values              = Vector(0.0),
+        confidenceIntervals = Vector(2.0) // 95% CI width of 2 => variance = 1
+      )
+      for {
+        likelihood <- GaussianLinearLikelihood.of[IO](
+                        coefficients   = Vector(Vector(1.0)),
+                        measurements   = Vector(2.0),
+                        uncertainties  = Vector(2.0), // 95% CI width of 2 => variance = 1
+                        priorLabel     = "x",
+                        evalCacheDepth = None
+                      )
+        posterior = GaussianAnalyticPosterior[IO](
+                      priors      = Set(prior),
+                      likelihoods = Set(likelihood)
+                    )
+        _ <- posterior.init
+        _ <- IO.println(s"Posterior mean: ${posterior.mean}")
+        _ <- IO.println(s"Posterior covariance: ${posterior.covarianceStridedVector}")
+      } yield ()
+    }
+}
+// Posterior mean: Map(x -> Vector(1.0))
+// Posterior covariance: Vector(0.5)
+```
+
 ---
 
 ## Framework Documentation
 
-Coming Soon!
+API documentation is generated during CI for each Scala version. For questions and discussion, see [GitHub Discussions](https://github.com/gvonness-apolitical/thylacine/discussions).
 
 ---
 ---
@@ -106,24 +152,20 @@ trying to integrate graphical concepts into a low-level Bayesian framework led t
 model, when just needing to perform posterior analysis. Indeed, priors and likelihoods can be formulated in any desired
 context and then fed into this framework.
 
-More abstractly, the concept of probabalistic graphical models is not intrinsically linked to Bayesian analysis. Indeed,
+More abstractly, the concept of probabilistic graphical models is not intrinsically linked to Bayesian analysis. Indeed,
 frequentist methods can also be used to process these graphs representations. Given this, I decided it did not make
 sense to artificially couple two concepts within this framework that are not intrinsically linked together (for
 more-or-less standard software engineering reasons not to introduce unneeded coupling in one's code).
 
-### Will you add tests?
+### How is the framework tested?
 
-How to meaningfully test a framework like this I find to be a very interesting problem in and of itself. I have some
-simple tests that cover simple analytic and non-analytic inferences. However, figuring out how to meaningful test the
-sampling inside a unit test in a deterministic and fast way is something I'm still working on.
-
-The first step was to simply extract out the inference framework from the BayKen application code (in another repo now).
-I have been doing extensive testing in the context of higher level inference validation using this codebase.
+The project has a comprehensive test suite covering analytic posteriors, numerical gradient computation, likelihood
+evaluation, MCMC sampling, and optimisation algorithms. Tests run against both Scala 2.13 and Scala 3 in CI.
 
 ### Why 'Thylacine'?
 
 Tasmanian tigers have been one of my favourite animals since I was a kid. I really hope we can bring them back someday.
-I named this framework after then, as this framework is about meaningfully merging data from a heterogenous collection
+I named this framework after them, as this framework is about meaningfully merging data from a heterogenous collection
 of measurements, and I see thylacines as a bit of a chimera with respect to other animals: they are marsupials,
 carnivorous, have stripes, and exhibit both feline and canine qualities. I.e. both are about combining different parts
 to get a better whole. If that's too much of a stretch, then let's just say it's artistic license :).
