@@ -69,4 +69,33 @@ class GaussianDistributionSpec extends AnyFlatSpec with should.Matchers {
     val dist = gaussianDist(Vector(1.0, 2.0, 3.0), Vector(1.0, 1.0, 1.0))
     dist.domainDimension shouldBe 3
   }
+
+  it should "compute correct gradient with off-diagonal covariance" in {
+    // Σ=((2,1),(1,2)), Σ^(-1) = (1/3)*((2,-1),(-1,2))
+    // gradient = Σ^(-1)(μ-x) = (1/3)*((-2+1),(1-2)) = (-1/3, -1/3)
+    val dist = GaussianDistribution(
+      mean       = VectorContainer(Vector(0.0, 0.0)),
+      covariance = MatrixContainer(Vector(Vector(2.0, 1.0), Vector(1.0, 2.0)))
+    ).getValidated
+    val grad = dist.logPdfGradientAt(VectorContainer(Vector(1.0, 1.0)))
+    grad.rawVector(0) shouldBe (-1.0 / 3.0 +- tol)
+    grad.rawVector(1) shouldBe (-1.0 / 3.0 +- tol)
+  }
+
+  it should "match gradient via finite differences" in {
+    val dist = GaussianDistribution(
+      mean       = VectorContainer(Vector(0.0, 0.0)),
+      covariance = MatrixContainer(Vector(Vector(2.0, 1.0), Vector(1.0, 2.0)))
+    ).getValidated
+    val x          = Vector(1.5, -0.5)
+    val eps        = 1e-7
+    val grad       = dist.logPdfGradientAt(VectorContainer(x))
+    val logPdfBase = dist.logPdfAt(VectorContainer(x))
+    for (i <- x.indices) {
+      val xNudged      = x.updated(i, x(i) + eps)
+      val logPdfNudged = dist.logPdfAt(VectorContainer(xNudged))
+      val fdGrad       = (logPdfNudged - logPdfBase) / eps
+      grad.rawVector(i) shouldBe (fdGrad +- 1e-5)
+    }
+  }
 }

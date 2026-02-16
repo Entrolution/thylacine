@@ -237,5 +237,45 @@ class HmcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec with Matc
         samples should not be empty
       }
     }
+
+    "produce sample covariance in a reasonable range" in {
+      (for {
+        case implicit0(stm: STM[IO]) <- STM.runtime[IO]
+        likelihood <- mcmcLikelihoodF
+        sampler = HmcmcSampledPosterior[IO](
+                    hmcmcConfig = HmcmcConfig(
+                      stepsBetweenSamples        = 2,
+                      stepsInDynamicsSimulation  = 10,
+                      warmupStepCount            = 10,
+                      dynamicsSimulationStepSize = 0.05
+                    ),
+                    telemetryUpdateCallback = noOpCallback,
+                    seed                    = Map("p" -> Vector(1.0, 2.0)),
+                    priors                  = Set[Prior[IO, ?]](mcmcPrior),
+                    likelihoods             = Set[Likelihood[IO, ?, ?]](likelihood)
+                  )
+        samples <- sampler.sample(30)
+        sampleList = samples.toList
+        values0    = sampleList.map(_("p").head)
+        values1    = sampleList.map(_("p")(1))
+        mean0      = values0.sum / values0.size
+        mean1      = values1.sum / values1.size
+        var0       = values0.map(v => (v - mean0) * (v - mean0)).sum / (values0.size - 1)
+        var1       = values1.map(v => (v - mean1) * (v - mean1)).sum / (values1.size - 1)
+        cov01 = values0
+                  .zip(values1)
+                  .map { case (v0, v1) => (v0 - mean0) * (v1 - mean1) }
+                  .sum / (values0.size - 1)
+        correlation = cov01 / Math.sqrt(var0 * var1)
+      } yield (var0, var1, correlation)).asserting { case (v0, v1, corr) =>
+        // True posterior variance ≈ 0.25 (per dimension). Check order of magnitude.
+        v0 should be > 0.01
+        v0 should be < 3.0
+        v1 should be > 0.01
+        v1 should be < 3.0
+        // Independent dimensions → low correlation
+        Math.abs(corr) should be < 0.8
+      }
+    }
   }
 }
