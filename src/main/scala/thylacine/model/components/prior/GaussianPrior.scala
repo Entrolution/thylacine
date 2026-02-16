@@ -25,8 +25,6 @@ import thylacine.model.distributions.GaussianDistribution
 import cats.effect.kernel.Async
 import smile.stat.distribution.MultivariateGaussianDistribution
 
-import scala.annotation.unused
-
 case class GaussianPrior[F[_]: Async](
   override private[thylacine] val identifier: ModelParameterIdentifier,
   private[thylacine] val priorData: RecordedData,
@@ -64,7 +62,7 @@ object GaussianPrior {
     values: Vector[Double],
     confidenceIntervals: Vector[Double]
   ): GaussianPrior[F] = {
-    assert(values.size == confidenceIntervals.size)
+    require(values.size == confidenceIntervals.size, "Values and confidence intervals must have the same size")
     GaussianPrior(
       identifier = ModelParameterIdentifier(label),
       priorData = RecordedData(
@@ -74,7 +72,6 @@ object GaussianPrior {
     )
   }
 
-  @unused
   def fromCovarianceMatrix[F[_]: Async](
     label: String,
     values: Vector[Double],
@@ -82,7 +79,10 @@ object GaussianPrior {
   ): GaussianPrior[F] = {
     val covarianceContainer = MatrixContainer(covarianceMatrix)
     val valueContainer      = VectorContainer(values)
-    assert(covarianceContainer.isSquare && valueContainer.dimension == covarianceContainer.rowTotalNumber)
+    require(
+      covarianceContainer.isSquare && valueContainer.dimension == covarianceContainer.rowTotalNumber,
+      "Covariance must be square and match value dimension"
+    )
     GaussianPrior(
       identifier = ModelParameterIdentifier(label),
       priorData = RecordedData(

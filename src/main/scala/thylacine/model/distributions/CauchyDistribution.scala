@@ -21,8 +21,7 @@ import thylacine.model.core.values.{ MatrixContainer, VectorContainer }
 import thylacine.model.core.{ CanValidate, RecordedData }
 import thylacine.util.LinearAlgebra
 
-import org.apache.commons.math3.special.Gamma.gamma
-import org.apache.commons.math3.util.FastMath
+import smile.math.special.Gamma.gamma
 import smile.stat.distribution.{ ChiSquareDistribution, MultivariateGaussianDistribution }
 
 private[thylacine] case class CauchyDistribution(
@@ -45,7 +44,7 @@ private[thylacine] case class CauchyDistribution(
 
   private lazy val logMultiplier = Math.log(gamma((1 + domainDimension) / 2.0)) - Math.log(
     gamma(0.5)
-  ) - domainDimension / 2.0 * Math.log(FastMath.PI) - Math.log(LinearAlgebra.determinant(covariance.rawMatrix)) / 2.0
+  ) - domainDimension / 2.0 * Math.log(Math.PI) - Math.log(LinearAlgebra.determinant(covariance.rawMatrix)) / 2.0
 
   override val domainDimension: Int = mean.dimension
 
