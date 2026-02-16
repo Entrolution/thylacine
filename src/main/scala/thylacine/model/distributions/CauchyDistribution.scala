@@ -65,7 +65,7 @@ private[thylacine] case class CauchyDistribution(
   ): VectorContainer = {
     val differentialFromMean = input.rawVector.zip(mean.rawVector).map { case (i, m) => i - m }
     val quadForm             = LinearAlgebra.quadraticForm(differentialFromMean, rawInverseCovariance)
-    val multiplierResult     = (1 + domainDimension) / (1 + quadForm)
+    val multiplierResult     = -(1.0 + domainDimension) / (1 + quadForm)
     val vectorResult         = LinearAlgebra.multiplyMV(rawInverseCovariance, differentialFromMean)
 
     VectorContainer(vectorResult.map(_ * multiplierResult))

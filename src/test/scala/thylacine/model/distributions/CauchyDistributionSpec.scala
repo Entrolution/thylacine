@@ -79,4 +79,46 @@ class CauchyDistributionSpec extends AnyFlatSpec with should.Matchers {
     val sample = dist.getRawSample
     sample.dimension shouldBe 2
   }
+
+  it should "compute correct gradient at a 1D non-mean point" in {
+    val dist = cauchyDist(Vector(0.0), Vector(1.0))
+    val grad = dist.logPdfGradientAt(VectorContainer(Vector(1.0)))
+    // Q = 1/1 = 1, gradient = -(1+1)/(1+1) * (1/1)*1 = -1.0
+    grad.rawVector(0) shouldBe (-1.0 +- tol)
+  }
+
+  it should "compute correct gradient at a 2D non-mean point" in {
+    val dist = cauchyDist(Vector(1.0, 2.0), Vector(4.0, 9.0))
+    val grad = dist.logPdfGradientAt(VectorContainer(Vector(3.0, 5.0)))
+    // Q = 4/4 + 9/9 = 2, gradient = -(1+2)/(1+2) * Σ^{-1}(x-μ) = (-0.5, -1/3)
+    grad.rawVector(0) shouldBe (-0.5 +- tol)
+    grad.rawVector(1) shouldBe (-1.0 / 3.0 +- tol)
+  }
+
+  it should "point gradient toward the mean" in {
+    val dist = cauchyDist(Vector(0.0), Vector(1.0))
+    dist.logPdfGradientAt(VectorContainer(Vector(2.0))).rawVector(0) should be < 0.0
+    dist.logPdfGradientAt(VectorContainer(Vector(-2.0))).rawVector(0) should be > 0.0
+  }
+
+  it should "match 1D standard Cauchy logPdf at origin" in {
+    val dist = cauchyDist(Vector(0.0), Vector(1.0))
+    // Standard 1D Cauchy: p(x) = 1/(π(1+x²)), logPdf(0) = -log(π)
+    val logPdfAtZero = dist.logPdfAt(VectorContainer(Vector(0.0)))
+    logPdfAtZero shouldBe (-Math.log(Math.PI) +- tol)
+  }
+
+  it should "match gradient via finite differences" in {
+    val dist       = cauchyDist(Vector(1.0, 2.0), Vector(4.0, 9.0))
+    val x          = Vector(3.0, 5.0)
+    val eps        = 1e-7
+    val grad       = dist.logPdfGradientAt(VectorContainer(x))
+    val logPdfBase = dist.logPdfAt(VectorContainer(x))
+    for (i <- x.indices) {
+      val xNudged      = x.updated(i, x(i) + eps)
+      val logPdfNudged = dist.logPdfAt(VectorContainer(xNudged))
+      val fdGrad       = (logPdfNudged - logPdfBase) / eps
+      grad.rawVector(i) shouldBe (fdGrad +- 1e-5)
+    }
+  }
 }

@@ -20,6 +20,8 @@ package thylacine.model.components.posterior
 import bengal.stm.STM
 import thylacine.TestUtils.*
 import thylacine.model.components.ComponentFixture.*
+import thylacine.model.components.likelihood.GaussianLinearLikelihood
+import thylacine.model.components.prior.GaussianPrior
 
 import cats.effect.IO
 import cats.effect.testing.scalatest.AsyncIOSpec
@@ -47,6 +49,35 @@ class GaussianAnalyticPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec with 
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
         posterior <- analyticPosteriorF
       } yield maxVectorDiff(posterior.covarianceStridedVector, Vector.fill(9)(0d))).asserting(_ shouldBe (0.0 +- .01))
+    }
+
+    // 1D Bayesian update: N(0,1) prior + y=x with y_obs=2, σ_obs²=1
+    // σ_post² = 1/(1+1) = 0.5, μ_post = 0.5*(0+2) = 1.0
+    "compute correct 1D Bayesian update" in {
+      (for {
+        case implicit0(stm: STM[IO]) <- STM.runtime[IO]
+        prior = GaussianPrior.fromConfidenceIntervals[IO](
+                  label               = "x",
+                  values              = Vector(0.0),
+                  confidenceIntervals = Vector(2.0) // variance = 1
+                )
+        likelihood <- GaussianLinearLikelihood.of[IO](
+                        coefficients   = Vector(Vector(1.0)),
+                        measurements   = Vector(2.0),
+                        uncertainties  = Vector(2.0), // variance = 1
+                        priorLabel     = "x",
+                        evalCacheDepth = None
+                      )
+        posterior = GaussianAnalyticPosterior[IO](
+                      priors      = Set(prior),
+                      likelihoods = Set(likelihood)
+                    )
+        _ <- posterior.init
+      } yield (posterior.mean, posterior.covarianceStridedVector))
+        .asserting { case (mean, cov) =>
+          maxIndexVectorDiff(mean, Map("x" -> Vector(1.0))) shouldBe (0.0 +- 1e-6)
+          maxVectorDiff(cov, Vector(0.5)) shouldBe (0.0 +- 1e-6)
+        }
     }
   }
 }

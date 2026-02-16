@@ -19,7 +19,6 @@ package thylacine.model.components.likelihood
 
 import bengal.stm.STM
 import thylacine.TestUtils.maxIndexVectorDiff
-import thylacine.model.components.ComponentFixture.fooNonAnalyticLikelihoodF
 import thylacine.model.core.values.IndexedVectorCollection
 
 import cats.effect.IO
@@ -27,46 +26,54 @@ import cats.effect.testing.scalatest.AsyncIOSpec
 import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 
-class GaussianLikelihoodSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers {
-  "GaussianLikelihood" - {
+class CauchyLikelihoodSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers {
 
-    "generate the a zero gradient at the likelihood maximum" in {
+  // 1D identity forward model, measurement=3, uncertainty=2 (variance=1)
+  private def cauchyLikelihoodF(implicit stm: STM[IO]): IO[CauchyLikelihood[IO]] =
+    CauchyLikelihood.of[IO](
+      coefficients   = Vector(Vector(1.0)),
+      measurements   = Vector(3.0),
+      uncertainties  = Vector(2.0),
+      priorLabel     = "x",
+      evalCacheDepth = None
+    )
+
+  "CauchyLikelihood" - {
+
+    "generate zero gradient at the likelihood maximum" in {
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
-        likelihood <- fooNonAnalyticLikelihoodF
-        result     <- likelihood.logPdfGradientAt(IndexedVectorCollection(Map("foo" -> Vector(1d, 2d))))
+        likelihood <- cauchyLikelihoodF
+        result     <- likelihood.logPdfGradientAt(IndexedVectorCollection(Map("x" -> Vector(3.0))))
       } yield result.genericScalaRepresentation)
-        .asserting(_ shouldBe Map("foo" -> Vector(0d, 0d)))
+        .asserting(_ shouldBe Map("x" -> Vector(0.0)))
     }
 
-    "generate the correct gradient of the logPdf for a given point" in {
+    "generate correct gradient at a non-trivial point" in {
+      // At θ=4: f(θ)=4, diff=4-3=1, Q=1/1=1
+      // measGrad = -(1+1)/(1+1) * 1 = -1.0
+      // gradient = J^T * measGrad = 1 * (-1.0) = -1.0
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
-        likelihood <- fooNonAnalyticLikelihoodF
-        result     <- likelihood.logPdfGradientAt(IndexedVectorCollection(Map("foo" -> Vector(3d, 2d))))
+        likelihood <- cauchyLikelihoodF
+        result     <- likelihood.logPdfGradientAt(IndexedVectorCollection(Map("x" -> Vector(4.0))))
       } yield result.genericScalaRepresentation)
-        .asserting(result => maxIndexVectorDiff(result, Map("foo" -> Vector(-4e5, -88e4))) shouldBe (0d +- 1e-4))
+        .asserting(r => maxIndexVectorDiff(r, Map("x" -> Vector(-1.0))) shouldBe (0.0 +- 1e-8))
     }
 
-    // End-to-end: chain-rule gradient vs full finite-difference gradient of likelihood logPdf
     "match gradient against finite differences" in {
-      val testPoint = Map("foo" -> Vector(1.5, 2.5))
+      val testPoint = Map("x" -> Vector(4.5))
       val eps       = 1e-7
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
-        likelihood <- fooNonAnalyticLikelihoodF
+        likelihood <- cauchyLikelihoodF
         grad       <- likelihood.logPdfGradientAt(IndexedVectorCollection(testPoint))
         logPdf0    <- likelihood.logPdfAt(IndexedVectorCollection(testPoint))
-        logPdfN0 <- likelihood.logPdfAt(
-                      IndexedVectorCollection(Map("foo" -> Vector(1.5 + eps, 2.5)))
-                    )
-        logPdfN1 <- likelihood.logPdfAt(
-                      IndexedVectorCollection(Map("foo" -> Vector(1.5, 2.5 + eps)))
-                    )
+        logPdfN    <- likelihood.logPdfAt(IndexedVectorCollection(Map("x" -> Vector(4.5 + eps))))
       } yield {
-        val fdGrad = Map("foo" -> Vector((logPdfN0 - logPdf0) / eps, (logPdfN1 - logPdf0) / eps))
+        val fdGrad = Map("x" -> Vector((logPdfN - logPdf0) / eps))
         maxIndexVectorDiff(grad.genericScalaRepresentation, fdGrad)
-      }).asserting(_ shouldBe (0.0 +- 0.1))
+      }).asserting(_ shouldBe (0.0 +- 1e-5))
     }
   }
 }
