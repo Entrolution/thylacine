@@ -74,7 +74,7 @@ class HmcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec with Matc
     "produce samples near the known posterior mean" in {
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
-        likelihood                   <- mcmcLikelihoodF
+        likelihood <- mcmcLikelihoodF
         sampler = HmcmcSampledPosterior[IO](
                     hmcmcConfig             = standardConfig,
                     telemetryUpdateCallback = noOpCallback,
@@ -125,7 +125,7 @@ class HmcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec with Matc
     "produce samples with reasonable spread" in {
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
-        likelihood                   <- mcmcLikelihoodF
+        likelihood <- mcmcLikelihoodF
         sampler = HmcmcSampledPosterior[IO](
                     hmcmcConfig             = standardConfig,
                     telemetryUpdateCallback = noOpCallback,
@@ -152,7 +152,7 @@ class HmcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec with Matc
     "maintain a reasonable acceptance rate" in {
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
-        ref                          <- Ref.of[IO, List[HmcmcTelemetryUpdate]](List.empty)
+        ref <- Ref.of[IO, List[HmcmcTelemetryUpdate]](List.empty)
         callback = (update: HmcmcTelemetryUpdate) => ref.update(update :: _)
         likelihood <- mcmcLikelihoodF
         sampler = HmcmcSampledPosterior[IO](
@@ -164,7 +164,7 @@ class HmcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec with Matc
                   )
         _       <- sampler.sample(15)
         updates <- ref.get
-        lastUpdate = updates.maxBy(_.jumpAttempts)
+        lastUpdate     = updates.maxBy(_.jumpAttempts)
         acceptanceRate = lastUpdate.jumpAcceptances.toDouble / lastUpdate.jumpAttempts
       } yield acceptanceRate).asserting { rate =>
         rate should be > 0.1
@@ -175,7 +175,7 @@ class HmcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec with Matc
     "produce distinct samples" in {
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
-        likelihood                   <- mcmcLikelihoodF
+        likelihood <- mcmcLikelihoodF
         sampler = HmcmcSampledPosterior[IO](
                     hmcmcConfig             = lightConfig,
                     telemetryUpdateCallback = noOpCallback,
@@ -192,7 +192,7 @@ class HmcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec with Matc
     "use a provided seed as starting point" in {
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
-        likelihood                   <- mcmcLikelihoodF
+        likelihood <- mcmcLikelihoodF
         sampler = HmcmcSampledPosterior[IO](
                     hmcmcConfig             = lightConfig,
                     telemetryUpdateCallback = noOpCallback,
