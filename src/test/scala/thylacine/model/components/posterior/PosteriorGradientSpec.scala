@@ -79,7 +79,7 @@ class PosteriorGradientSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
         posterior <- posteriorF
-        grad     <- posterior.logPdfGradientAt(IndexedVectorCollection(Map("x" -> Vector(0.0), "y" -> Vector(0.0))))
+        grad      <- posterior.logPdfGradientAt(IndexedVectorCollection(Map("x" -> Vector(0.0), "y" -> Vector(0.0))))
       } yield grad.genericScalaRepresentation)
         .asserting { g =>
           maxIndexVectorDiff(g, Map("x" -> Vector(2.0), "y" -> Vector(1.0))) shouldBe (0.0 +- 1e-8)
@@ -92,8 +92,8 @@ class PosteriorGradientSpec extends AsyncFreeSpec with AsyncIOSpec with Matchers
       (for {
         case implicit0(stm: STM[IO]) <- STM.runtime[IO]
         posterior <- posteriorF
-        grad     <- posterior.logPdfGradientAt(IndexedVectorCollection(testPoint))
-        logPdf0  <- posterior.logPdfAt(IndexedVectorCollection(testPoint))
+        grad      <- posterior.logPdfGradientAt(IndexedVectorCollection(testPoint))
+        logPdf0   <- posterior.logPdfAt(IndexedVectorCollection(testPoint))
         logPdfNx <- posterior.logPdfAt(
                       IndexedVectorCollection(Map("x" -> Vector(0.5 + eps), "y" -> Vector(1.5)))
                     )

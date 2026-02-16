@@ -49,12 +49,12 @@ class CauchyPriorSpec extends AnyFlatSpec with should.Matchers {
   }
 
   it should "match gradient via finite differences" in {
-    val x          = Vector(1.5)
-    val eps        = 1e-7
-    val grad       = prior.rawLogPdfGradientAt(x)
-    val logPdfBase = dist.logPdfAt(VectorContainer(x))
+    val x           = Vector(1.5)
+    val eps         = 1e-7
+    val grad        = prior.rawLogPdfGradientAt(x)
+    val logPdfBase  = dist.logPdfAt(VectorContainer(x))
     val logPdfNudge = dist.logPdfAt(VectorContainer(Vector(x(0) + eps)))
-    val fdGrad     = (logPdfNudge - logPdfBase) / eps
+    val fdGrad      = (logPdfNudge - logPdfBase) / eps
     grad(0) shouldBe (fdGrad +- 1e-5)
   }
 }
