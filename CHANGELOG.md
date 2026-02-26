@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.15.2] - 2026-02-26
+
+### Added
+
+- 76 new tests: CachedComputation (5), ModelParameterSimplex (16), QuadratureAbscissa (15), PointInCube (25), SLQ integration smoke (16)
+- `MdsOptimisedPosterior` convenience factory method (matching other optimised posteriors)
+- `sbt-dependency-check` plugin for CVE scanning
+- `Test / fork := true` to prevent JVM hang from fire-and-forget fibers
+
+### Changed
+
+- Narrowed `ejml-all` dependency to `ejml-ddense` (only dense row-major modules used)
+- Grouped `HmcmcEngine.runDynamicSimulationFrom` parameters into case classes (14 → 6 params)
+- Replaced tuple access in `SlqEngine` with named telemetry case class fields
+
+### Fixed
+
+- README Quick Start: 3 broken API references (`fromConfidenceIntervals` → `fromStandardDeviations`, etc.)
+- CONTRIBUTING.md code style section and PR checklist
+
+### Removed
+
+- 3 flaky `CachedComputation` tests dependent on fire-and-forget STM timing
+- 6 stale `.gitignore` entries for non-existent directories
+
 ## [0.15.1] - 2026-02-26
 
 ### Fixed
