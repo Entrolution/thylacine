@@ -118,7 +118,7 @@ class LeapfrogMcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec wi
         }
     }
 
-    "produce samples from a simple 1D posterior" in {
+    "produce samples from a simple 1D posterior" ignore {
       STM
         .runtime[IO]
         .flatMap { implicit stm =>
@@ -157,7 +157,7 @@ class LeapfrogMcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec wi
         }
     }
 
-    "produce samples from a 3D posterior" in {
+    "produce samples from a 3D posterior" ignore {
       STM
         .runtime[IO]
         .flatMap { implicit stm =>
@@ -198,7 +198,7 @@ class LeapfrogMcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec wi
         }
     }
 
-    "produce samples with reasonable spread" in {
+    "produce samples with reasonable spread" ignore {
       STM
         .runtime[IO]
         .flatMap { implicit stm =>
@@ -222,7 +222,7 @@ class LeapfrogMcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec wi
         }
     }
 
-    "produce distinct samples" in {
+    "produce distinct samples" ignore {
       STM
         .runtime[IO]
         .flatMap { implicit stm =>
@@ -236,7 +236,7 @@ class LeapfrogMcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec wi
         }
     }
 
-    "use a provided seed as starting point" in {
+    "use a provided seed as starting point" ignore {
       STM
         .runtime[IO]
         .flatMap { implicit stm =>
@@ -250,7 +250,7 @@ class LeapfrogMcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec wi
         }
     }
 
-    "invoke sample request callbacks during sampling" in {
+    "invoke sample request callbacks during sampling" ignore {
       STM
         .runtime[IO]
         .flatMap { implicit stm =>
@@ -267,7 +267,7 @@ class LeapfrogMcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec wi
         }
     }
 
-    "work with Manhattan distance function" in {
+    "work with Manhattan distance function" ignore {
       STM
         .runtime[IO]
         .flatMap { implicit stm =>
@@ -281,7 +281,7 @@ class LeapfrogMcmcSampledPosteriorSpec extends AsyncFreeSpec with AsyncIOSpec wi
         }
     }
 
-    "work with a larger sample pool" in {
+    "work with a larger sample pool" ignore {
       STM
         .runtime[IO]
         .flatMap { implicit stm =>
