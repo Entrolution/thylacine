@@ -30,7 +30,7 @@ private[thylacine] case class MatrixContainer(
   validated: Boolean = false
 ) extends Container
     with CanValidate[MatrixContainer] {
-  if (!validated) {
+  if (!validated && values.nonEmpty) {
     require(
       values.keys.map(_._1).max <= rowTotalNumber,
       s"Row index out of bounds: max ${values.keys.map(_._1).max} exceeds $rowTotalNumber"
@@ -135,10 +135,13 @@ private[thylacine] object MatrixContainer {
         )
       }
       ._2
-    MatrixContainer(
-      values            = valueMap,
-      rowTotalNumber    = valueMap.keySet.map(_._1).max,
-      columnTotalNumber = valueMap.keySet.map(_._2).max
-    )
+    if (valueMap.isEmpty)
+      zeros(0, 0)
+    else
+      MatrixContainer(
+        values            = valueMap,
+        rowTotalNumber    = valueMap.keySet.map(_._1).max,
+        columnTotalNumber = valueMap.keySet.map(_._2).max
+      )
   }
 }

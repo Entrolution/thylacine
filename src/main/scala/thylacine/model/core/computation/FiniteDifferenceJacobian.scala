@@ -53,7 +53,11 @@ private[thylacine] case class FiniteDifferenceJacobian(
                 .map(k => (k._1, index) -> k._2)
             }
 
-          identifier -> MatrixContainer(gradientComponents.reduce(_ ++ _), currentEvaluation.dimension, nudges.size)
+          identifier -> MatrixContainer(
+            gradientComponents.reduceOption(_ ++ _).getOrElse(Map.empty),
+            currentEvaluation.dimension,
+            nudges.size
+          )
         }
         .toMap
 
@@ -81,7 +85,11 @@ private[thylacine] case class FiniteDifferenceJacobian(
                 .map(k => (k._1, index) -> k._2)
             }
 
-          identifier -> MatrixContainer(gradientComponents.reduce(_ ++ _), rangeDim, nudgePairs.size)
+          identifier -> MatrixContainer(
+            gradientComponents.reduceOption(_ ++ _).getOrElse(Map.empty),
+            rangeDim,
+            nudgePairs.size
+          )
         }
         .toMap
 

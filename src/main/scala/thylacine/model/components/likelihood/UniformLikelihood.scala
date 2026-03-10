@@ -44,9 +44,10 @@ case class UniformLikelihood[F[_]: Async, T <: ForwardModel[F]](
       this
     } else {
       this.copy(
-        lowerBounds = lowerBounds.getValidated,
-        upperBounds = upperBounds.getValidated,
-        validated   = true
+        lowerBounds  = lowerBounds.getValidated,
+        upperBounds  = upperBounds.getValidated,
+        forwardModel = forwardModel.getValidated.asInstanceOf[T],
+        validated    = true
       )
     }
 

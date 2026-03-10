@@ -49,7 +49,11 @@ case class GaussianLinearLikelihood[F[_]: Async](
     if (validated) {
       this
     } else {
-      this.copy(observations = observations.getValidated, validated = true)
+      this.copy(
+        observations = observations.getValidated,
+        forwardModel = forwardModel.getValidated,
+        validated    = true
+      )
     }
 
   override private[thylacine] lazy val observationDistribution: GaussianDistribution =

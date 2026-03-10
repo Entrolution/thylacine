@@ -201,7 +201,8 @@ object GaussianAnalyticPosterior {
             MatrixContainer.zeros(likelihood.forwardModel.rangeDimension, id._2)
           )
         }
-        .reduce(_.columnMergeWith(_))
+        .reduceOption(_.columnMergeWith(_))
+        .getOrElse(MatrixContainer.zeros(likelihood.forwardModel.rangeDimension, 0))
 
       this.copy(
         data = Some(

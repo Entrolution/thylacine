@@ -61,13 +61,18 @@ private[thylacine] object MathOps {
         (i.head + j) +: i
       }
 
-    val normalisedCdf = cdfReversed
-      .map(_ / cdfReversed.head)
-      .reverse
+    if (cdfReversed.head == BigDecimal(0)) {
+      val n = values.size
+      (0 until n).map(i => (BigDecimal(i) / BigDecimal(n), BigDecimal(i + 1) / BigDecimal(n))).toVector
+    } else {
+      val normalisedCdf = cdfReversed
+        .map(_ / cdfReversed.head)
+        .reverse
 
-    normalisedCdf
-      .dropRight(1)
-      .zip(normalisedCdf.tail)
+      normalisedCdf
+        .dropRight(1)
+        .zip(normalisedCdf.tail)
+    }
   }
 
   private[thylacine] def vectorCdfStaircase(

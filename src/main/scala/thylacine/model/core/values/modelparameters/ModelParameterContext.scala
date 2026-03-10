@@ -62,7 +62,8 @@ private[thylacine] trait ModelParameterContext {
         input.retrieveIndex(identifier).scalaVector +: current
       }
       .reverse
-      .reduce(_ ++ _)
+      .reduceOption(_ ++ _)
+      .getOrElse(Vector.empty)
 
   final private[thylacine] def modelParameterCollectionToRawVector(
     input: ModelParameterCollection
