@@ -26,7 +26,5 @@ case class CoordinateSlideConfig(
   require(convergenceThreshold > 0, s"convergenceThreshold must be > 0, got $convergenceThreshold")
   require(goldenSectionTolerance > 0, s"goldenSectionTolerance must be > 0, got $goldenSectionTolerance")
   require(lineProbeExpansionFactor > 0, s"lineProbeExpansionFactor must be > 0, got $lineProbeExpansionFactor")
-  numberOfPriorSamplesToSetScale.foreach(n =>
-    require(n > 0, s"numberOfPriorSamplesToSetScale must be > 0, got $n")
-  )
+  numberOfPriorSamplesToSetScale.foreach(n => require(n > 0, s"numberOfPriorSamplesToSetScale must be > 0, got $n"))
 }
