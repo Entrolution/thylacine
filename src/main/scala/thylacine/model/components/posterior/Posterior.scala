@@ -22,7 +22,7 @@ import thylacine.model.components.prior.*
 import thylacine.model.core.GenericIdentifier.*
 import thylacine.model.core.*
 import thylacine.model.core.values.IndexedVectorCollection.ModelParameterCollection
-import thylacine.model.core.values.VectorContainer
+import thylacine.model.core.values.{ IndexedVectorCollection, VectorContainer }
 import thylacine.model.core.values.modelparameters.{ ModelParameterPdf, ModelParameterContext }
 
 import cats.syntax.all.*
@@ -64,15 +64,17 @@ private[thylacine] trait Posterior[F[_], P <: Prior[F, ?], L <: Likelihood[F, ?,
       priorSum <-
         priors.toList
           .traverse(_.logPdfGradientAt(input))
-          .map(_.reduce(_.rawSumWith(_)))
+          .map(_.reduceOption(_.rawSumWith(_)).getOrElse(zeroModelParameterCollection))
       likelihoodSum <-
         likelihoods.toList
           .traverse(_.logPdfGradientAt(input))
-          .map(_.reduce(_.rawSumWith(_)))
+          .map(_.reduceOption(_.rawSumWith(_)).getOrElse(zeroModelParameterCollection))
     } yield priorSum.rawSumWith(likelihoodSum)
 
   private[thylacine] def samplePriors: F[ModelParameterCollection] =
-    priors.toVector.traverse(_.sampleModelParameters(1).map(_.head)).map(_.reduce(_.rawMergeWith(_)))
+    priors.toVector
+      .traverse(_.sampleModelParameters(1).map(_.head))
+      .map(_.reduceOption(_.rawMergeWith(_)).getOrElse(IndexedVectorCollection.empty))
 
   override private[thylacine] def logPdfAt(
     input: ModelParameterCollection

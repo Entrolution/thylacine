@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.16.0] - 2026-03-10
+
+### Added
+
+- Parameter validation (`require`) to all 7 config case classes: `HmcmcConfig`, `LeapfrogMcmcConfig`, `SlqConfig`, `MdsConfig`, `HookeAndJeevesConfig`, `ConjugateGradientConfig`, `CoordinateSlideConfig`. Invalid parameters (negative step sizes, zero convergence thresholds, out-of-range probabilities, etc.) now fail at construction with descriptive error messages instead of causing confusing downstream errors.
+- Forward model validation in `GaussianLikelihood`, `UniformLikelihood`, and `GaussianLinearLikelihood` — `getValidated` now propagates validation to the forward model, consistent with `CauchyLikelihood`.
+
+### Changed
+
+- Updated `bengal-stm` dependency from 0.12.0 to 0.13.0
+- Replaced `.reduce` with `.reduceOption` across 8 call sites in 6 files (`Posterior`, `ModelParameterContext`, `ModelParameterPdf`, `FiniteDifferenceJacobian`, `GaussianAnalyticPosterior`, `Likelihood`) for defensive robustness against empty collections.
+
 ## [0.15.3] - 2026-02-27
 
 ### Changed

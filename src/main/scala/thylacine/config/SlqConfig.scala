@@ -25,4 +25,19 @@ case class SlqConfig(
   sampleParallelism: Int,
   maxIterationCount: Int,
   minIterationCount: Int
-)
+) {
+  require(poolSize > 0, s"poolSize must be > 0, got $poolSize")
+  require(abscissaNumber > 0, s"abscissaNumber must be > 0, got $abscissaNumber")
+  require(domainScalingIncrement > 0, s"domainScalingIncrement must be > 0, got $domainScalingIncrement")
+  require(
+    targetAcceptanceProbability > 0 && targetAcceptanceProbability < 1,
+    s"targetAcceptanceProbability must be in (0, 1), got $targetAcceptanceProbability"
+  )
+  require(sampleParallelism > 0, s"sampleParallelism must be > 0, got $sampleParallelism")
+  require(maxIterationCount > 0, s"maxIterationCount must be > 0, got $maxIterationCount")
+  require(minIterationCount > 0, s"minIterationCount must be > 0, got $minIterationCount")
+  require(
+    minIterationCount <= maxIterationCount,
+    s"minIterationCount ($minIterationCount) must be <= maxIterationCount ($maxIterationCount)"
+  )
+}

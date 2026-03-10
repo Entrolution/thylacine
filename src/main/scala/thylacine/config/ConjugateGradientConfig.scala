@@ -23,5 +23,8 @@ case class ConjugateGradientConfig(
   lineProbeExpansionFactor: Double,
   minimumNumberOfIterations: Int
 ) {
+  require(convergenceThreshold > 0, s"convergenceThreshold must be > 0, got $convergenceThreshold")
   require(goldenSectionTolerance > 0, s"goldenSectionTolerance must be > 0, got $goldenSectionTolerance")
+  require(lineProbeExpansionFactor > 0, s"lineProbeExpansionFactor must be > 0, got $lineProbeExpansionFactor")
+  require(minimumNumberOfIterations > 0, s"minimumNumberOfIterations must be > 0, got $minimumNumberOfIterations")
 }

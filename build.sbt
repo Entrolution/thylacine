@@ -1,4 +1,4 @@
-ThisBuild / tlBaseVersion := "0.15"
+ThisBuild / tlBaseVersion := "0.16"
 
 ThisBuild / organization     := "ai.entrolution"
 ThisBuild / organizationName := "Greg von Nessi"
@@ -13,7 +13,7 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("21"))
 
 scalaVersion                    := DependencyVersions.scala2p13Version
 ThisBuild / crossScalaVersions  := Seq(DependencyVersions.scala2p13Version, DependencyVersions.scala3Version)
-ThisBuild / tlVersionIntroduced := Map("2.13" -> "0.15", "3" -> "0.15")
+ThisBuild / tlVersionIntroduced := Map("2.13" -> "0.16", "3" -> "0.16")
 
 Global / idePackagePrefix := Some("ai.entrolution")
 Global / excludeLintKeys += idePackagePrefix

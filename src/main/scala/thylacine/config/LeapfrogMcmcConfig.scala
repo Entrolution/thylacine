@@ -21,4 +21,8 @@ case class LeapfrogMcmcConfig(
   stepsBetweenSamples: Int,
   warmupStepCount: Int,
   samplePoolSize: Int
-)
+) {
+  require(stepsBetweenSamples > 0, s"stepsBetweenSamples must be > 0, got $stepsBetweenSamples")
+  require(warmupStepCount >= 0, s"warmupStepCount must be >= 0, got $warmupStepCount")
+  require(samplePoolSize > 0, s"samplePoolSize must be > 0, got $samplePoolSize")
+}

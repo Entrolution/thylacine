@@ -18,7 +18,7 @@ package ai.entrolution
 package thylacine.model.core.values.modelparameters
 
 import thylacine.model.core.values.IndexedVectorCollection.ModelParameterCollection
-import thylacine.model.core.values.*
+import thylacine.model.core.values.{ IndexedVectorCollection, VectorContainer }
 import thylacine.model.core.{ AsyncImplicits, GenericScalarValuedMapping }
 
 import cats.effect.Async
@@ -61,7 +61,9 @@ private[thylacine] trait ModelParameterPdf[F[_]] extends GenericScalarValuedMapp
                               VectorContainer(finiteDifferenceResults.toVector)
                             )
                           }
-      result <- Async[F].delay(componentResults.reduce(_.rawMergeWith(_)))
+      result <- Async[F].delay(
+                  componentResults.reduceOption(_.rawMergeWith(_)).getOrElse(IndexedVectorCollection.empty)
+                )
     } yield result
 
   // Will work most of the time but will require
@@ -76,7 +78,8 @@ private[thylacine] trait ModelParameterPdf[F[_]] extends GenericScalarValuedMapp
       .map { gl =>
         IndexedVectorCollection(gl._1, VectorContainer(gl._2.rawVector.map(_ * pdf)))
       }
-      .reduce(_.rawMergeWith(_))
+      .reduceOption(_.rawMergeWith(_))
+      .getOrElse(IndexedVectorCollection.empty)
 
   final def logPdfAt(input: Map[String, Vector[Double]]): F[Double] =
     logPdfAt(IndexedVectorCollection(input))

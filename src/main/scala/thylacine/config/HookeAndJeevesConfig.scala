@@ -20,4 +20,9 @@ package thylacine.config
 case class HookeAndJeevesConfig(
   convergenceThreshold: Double,
   numberOfPriorSamplesToSetScale: Option[Int]
-)
+) {
+  require(convergenceThreshold > 0, s"convergenceThreshold must be > 0, got $convergenceThreshold")
+  numberOfPriorSamplesToSetScale.foreach(n =>
+    require(n > 0, s"numberOfPriorSamplesToSetScale must be > 0, got $n")
+  )
+}
