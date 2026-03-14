@@ -12,6 +12,9 @@ ThisBuild / developers ++= List(
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("21"))
 ThisBuild / githubWorkflowOSes         := Seq("blacksmith-2vcpu-ubuntu-2204")
 
+// Only publish on tag pushes (not main) to avoid SNAPSHOT publish failures
+ThisBuild / githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v")))
+
 scalaVersion                    := DependencyVersions.scala2p13Version
 ThisBuild / crossScalaVersions  := Seq(DependencyVersions.scala2p13Version, DependencyVersions.scala3Version)
 ThisBuild / tlVersionIntroduced := Map("2.13" -> "0.16", "3" -> "0.16")
