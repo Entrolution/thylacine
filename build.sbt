@@ -5,7 +5,7 @@ ThisBuild / organizationName := "Greg von Nessi"
 ThisBuild / startYear        := Some(2023)
 ThisBuild / licenses         := Seq(License.Apache2)
 ThisBuild / developers ++= List(
-  tlGitHubDev("gvonness", "Greg von Nessi")
+  tlGitHubDev("gvonnessi", "Greg von Nessi")
 )
 
 // CI configuration - Java 21 required for Smile 3.x
